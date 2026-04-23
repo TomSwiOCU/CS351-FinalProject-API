@@ -38,7 +38,6 @@ export function TasksPage() {
 
   async function handleAddTask(e: React.FormEvent) {
     e.preventDefault();
-
     if (!title.trim()) return;
 
     try {
@@ -77,9 +76,10 @@ export function TasksPage() {
   return (
     <section className="panel">
       <h2>Tasks</h2>
-      <p className="lead">Manage your daily tasks, assign them to lists, and track completion status.</p>
+      <p className="lead">Manage your daily tasks</p>
 
-      <form onSubmit={handleAddTask} style={{ marginBottom: '1rem' }}>
+      {/* FORM */}
+      <form onSubmit={handleAddTask} style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'grid', gap: '0.75rem' }}>
           <input
             type="text"
@@ -113,8 +113,11 @@ export function TasksPage() {
         </div>
       </form>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <label htmlFor="statusFilter">Filter by status: </label>{' '}
+      {/* FILTER */}
+      <div style={{ marginBottom: '1.25rem' }}>
+        <label htmlFor="statusFilter" style={{ fontWeight: 500 }}>
+          Filter:
+        </label>{' '}
         <select
           id="statusFilter"
           value={statusFilter}
@@ -128,40 +131,58 @@ export function TasksPage() {
 
       {error && <p className="muted">{error}</p>}
 
+      {/* TASK LIST */}
       {loading ? (
-        <p className="muted">Loading tasks...</p>
+        <p className="muted">Loading...</p>
       ) : tasks.length === 0 ? (
         <p className="muted">No tasks found.</p>
       ) : (
-        <div style={{ display: 'grid', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gap: '1rem' }}>
           {tasks.map((task) => (
             <div
               key={task.id}
               style={{
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                padding: '0.75rem',
+                border: '2px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '1rem',
+                background: '#ffffff',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
                 <div>
-                  <h3 style={{ margin: 0 }}>{task.title}</h3>
-                  <p style={{ margin: '0.35rem 0' }}>
-                    <strong>Status:</strong> {task.completed ? 'Completed' : 'Pending'}
+                  <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{task.title}</h3>
+
+                  <p style={{ margin: '0.4rem 0' }}>
+                    <strong>Status:</strong>{' '}
+                    <span style={{ color: task.completed ? '#16a34a' : '#dc2626' }}>
+                      {task.completed ? 'Completed' : 'Pending'}
+                    </span>
                   </p>
-                  <p style={{ margin: '0.35rem 0' }}>
+
+                  <p style={{ margin: '0.4rem 0' }}>
                     <strong>Priority:</strong> {task.priority}
                   </p>
-                  <p style={{ margin: '0.35rem 0' }}>
-                    <strong>Due Date:</strong> {task.due_date || 'No due date'}
+
+                  <p style={{ margin: '0.4rem 0' }}>
+                    <strong>Due:</strong> {task.due_date || '—'}
                   </p>
-                  <p style={{ margin: '0.35rem 0' }}>
+
+                  <p style={{ margin: '0.4rem 0' }}>
                     <strong>List:</strong> {getListName(task.list_id)}
                   </p>
                 </div>
 
                 <div>
-                  <button type="button" onClick={() => handleDeleteTask(task.id)}>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteTask(task.id)}
+                    style={{
+                      background: '#ef4444',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                    }}
+                  >
                     Delete
                   </button>
                 </div>
