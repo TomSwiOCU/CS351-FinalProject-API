@@ -1,3 +1,4 @@
+// src/app.js
 const cors = require("cors");
 const express = require("express");
 const { openDatabase } = require("./db");
@@ -14,34 +15,45 @@ async function createApp() {
 
   const app = express();
 
+  // CORS Configuration - optimized for React development
   const localhostDevOrigins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:4200",
     "http://127.0.0.1:4200",
   ];
+
   if (process.env.CORS_ORIGIN === "*") {
-    app.use(cors({ origin: true }));
+    app.use(cors({ origin: true }));           // Allow all (use only for testing)
   } else if (process.env.CORS_ORIGIN) {
     app.use(
       cors({
         origin: process.env.CORS_ORIGIN.split(",").map((s) => s.trim()).filter(Boolean),
-      }),
+        credentials: true,                     // Important if you use cookies later
+      })
     );
   } else {
-    app.use(cors({ origin: localhostDevOrigins }));
+    app.use(
+      cors({
+        origin: localhostDevOrigins,
+        credentials: true,
+      })
+    );
   }
 
   app.use(express.json());
 
+  // Versioned API routes
   const v1 = express.Router();
+
   v1.use("/auth", createAuthRouter(store));
-  v1.use("/tasks/:taskId/reminders", createRemindersRouter(store));
   v1.use("/tasks", createTasksRouter(store));
+  v1.use("/tasks/:taskId/reminders", createRemindersRouter(store));
   v1.use("/lists", createListsRouter(store));
 
   app.use("/v1", v1);
 
+  // 404 handler
   app.use((req, res) => {
     res.status(404).json({
       error: { code: 404, message: "Not found." },

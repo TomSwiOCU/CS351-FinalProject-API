@@ -1,20 +1,24 @@
+// src/features/shell/AppShell.tsx
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { logout } from '../../core/auth/auth';
+import { TaskGroups } from '../lists/TaskGroups';
 import './AppShell.css';
 
 export function AppShell() {
   const navigate = useNavigate();
+  const [selectedListId, setSelectedListId] = useState<number | null>(null);
 
-  function onLogout(): void {
+  const handleLogout = () => {
     void logout().then(() => {
       void navigate('/login', { replace: true });
     });
-  }
+  };
 
   return (
     <div className="shell">
       <header className="topbar">
-        <div className="brand">Tasks &amp; Reminders</div>
+        <div className="brand">Daily Task Log</div>
         <nav>
           <NavLink to="/tasks" end className={({ isActive }) => (isActive ? 'active' : '')}>
             Tasks
@@ -26,14 +30,31 @@ export function AppShell() {
             Profile
           </NavLink>
         </nav>
-        <button type="button" className="ghost" onClick={onLogout}>
+        <button type="button" className="ghost" onClick={handleLogout}>
           Log out
         </button>
       </header>
 
-      <main className="content">
-        <Outlet />
-      </main>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Sidebar - Task Groups */}
+        <div style={{ 
+          width: '320px', 
+          borderRight: '1.5px solid #e2e8f0', 
+          background: '#f8fafc',
+          overflowY: 'auto',
+          padding: '1.5rem'
+        }}>
+          <TaskGroups 
+            selectedListId={selectedListId} 
+            onSelectList={setSelectedListId} 
+          />
+        </div>
+
+        {/* Main Content Area */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.75rem' }}>
+          <Outlet context={{ selectedListId, setSelectedListId }} />
+        </div>
+      </div>
     </div>
   );
 }

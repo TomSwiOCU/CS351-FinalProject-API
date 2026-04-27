@@ -1,31 +1,49 @@
+// src/features/tasks/TasksPage.tsx
 import { useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import '../panel.css';
-import { createTask, deleteTask, getLists, getTasks } from '../../core/api/tasks-reminders-api';
-import type { Task, TaskList, TaskPriority, TaskStatusFilter } from '../../core/models/api.types';
+import { 
+  createTask, 
+  deleteTask, 
+  getTasks, 
+  getLists 
+} from '../../core/api/tasks-reminders-api';
+import type { Task, TaskList, TaskPriority } from '../../core/models/api.types';
+
+type OutletContextType = {
+  selectedListId: number | null;
+};
 
 export function TasksPage() {
+  const { selectedListId } = useOutletContext<OutletContextType>();
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [lists, setLists] = useState<TaskList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Form state
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [dueDate, setDueDate] = useState('');
-  const [listId, setListId] = useState('');
-  const [statusFilter, setStatusFilter] = useState<TaskStatusFilter | ''>('');
+  const [selectedFormListId, setSelectedFormListId] = useState<string>('');
 
   async function loadData() {
     try {
       setLoading(true);
       setError('');
 
-      const filters = statusFilter ? { status: statusFilter } : undefined;
-      const [tasksData, listsData] = await Promise.all([getTasks(filters), getLists()]);
+      const filters: any = selectedListId !== null ? { list_id: selectedListId } : {};
+
+      const [tasksData, listsData] = await Promise.all([
+        getTasks(filters),
+        getLists()
+      ]);
 
       setTasks(tasksData);
       setLists(listsData);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setError('Failed to load tasks.');
     } finally {
       setLoading(false);
@@ -34,9 +52,9 @@ export function TasksPage() {
 
   useEffect(() => {
     loadData();
-  }, [statusFilter]);
+  }, [selectedListId]);
 
-  async function handleAddTask(e: React.FormEvent) {
+  const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
@@ -45,63 +63,79 @@ export function TasksPage() {
         title: title.trim(),
         priority,
         due_date: dueDate || null,
-        list_id: listId ? Number(listId) : null,
+        list_id: selectedFormListId ? Number(selectedFormListId) : (selectedListId || null),
       });
 
       setTitle('');
       setPriority('medium');
       setDueDate('');
-      setListId('');
+      setSelectedFormListId('');
+
       loadData();
-    } catch {
+    } catch (err) {
       setError('Failed to create task.');
     }
-  }
+  };
 
-  async function handleDeleteTask(id: number) {
+  const handleDeleteTask = async (id: number) => {
+    if (!confirm('Delete this task?')) return;
     try {
       await deleteTask(id);
       loadData();
     } catch {
       setError('Failed to delete task.');
     }
-  }
+  };
 
-  function getListName(taskListId: number | null) {
-    if (taskListId === null) return 'No List';
-    const list = lists.find((item) => item.id === taskListId);
-    return list ? list.name : 'Unknown List';
-  }
+  const getListName = (taskListId: number | null) => {
+    if (taskListId === null) return 'No Category';
+    const list = lists.find(l => l.id === taskListId);
+    return list ? list.name : 'Unknown';
+  };
+
+  const currentListName = selectedListId 
+    ? lists.find(l => l.id === selectedListId)?.name 
+    : null;
 
   return (
     <section className="panel">
-      <h2>Tasks</h2>
-      <p className="lead">Manage your daily tasks</p>
+      <h2>
+        {currentListName ? `Tasks in "${currentListName}"` : 'All Tasks'}
+      </h2>
+      <p className="lead">Manage your daily tasks and productivity</p>
 
-      {/* FORM */}
+      {/* Add Task Form */}
       <form onSubmit={handleAddTask} style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'grid', gap: '0.75rem' }}>
           <input
             type="text"
-            placeholder="Task title"
+            placeholder="What needs to be done today?"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
-            <option value="low">Low Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="high">High Priority</option>
-          </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <select 
+              value={priority} 
+              onChange={(e) => setPriority(e.target.value as TaskPriority)}
+            >
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
 
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-          />
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </div>
 
-          <select value={listId} onChange={(e) => setListId(e.target.value)}>
-            <option value="">No List</option>
+          <select 
+            value={selectedFormListId} 
+            onChange={(e) => setSelectedFormListId(e.target.value)}
+          >
+            <option value="">No Category</option>
             {lists.map((list) => (
               <option key={list.id} value={list.id}>
                 {list.name}
@@ -113,29 +147,14 @@ export function TasksPage() {
         </div>
       </form>
 
-      {/* FILTER */}
-      <div style={{ marginBottom: '1.25rem' }}>
-        <label htmlFor="statusFilter" style={{ fontWeight: 500 }}>
-          Filter:
-        </label>{' '}
-        <select
-          id="statusFilter"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as TaskStatusFilter | '')}
-        >
-          <option value="">All</option>
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
-        </select>
-      </div>
+      {error && <p style={{ color: '#ef4444' }}>{error}</p>}
 
-      {error && <p className="muted">{error}</p>}
-
-      {/* TASK LIST */}
       {loading ? (
-        <p className="muted">Loading...</p>
+        <p className="muted">Loading tasks...</p>
       ) : tasks.length === 0 ? (
-        <p className="muted">No tasks found.</p>
+        <p className="muted">
+          {selectedListId ? `No tasks in "${currentListName}" yet.` : 'No tasks found. Add one above!'}
+        </p>
       ) : (
         <div style={{ display: 'grid', gap: '1rem' }}>
           {tasks.map((task) => (
@@ -144,15 +163,14 @@ export function TasksPage() {
               style={{
                 border: '2px solid #e2e8f0',
                 borderRadius: '12px',
-                padding: '1rem',
+                padding: '1.25rem',
                 background: '#ffffff',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{task.title}</h3>
-
+                  <h3 style={{ margin: '0 0 0.5rem 0' }}>{task.title}</h3>
+                  
                   <p style={{ margin: '0.4rem 0' }}>
                     <strong>Status:</strong>{' '}
                     <span style={{ color: task.completed ? '#16a34a' : '#dc2626' }}>
@@ -165,27 +183,27 @@ export function TasksPage() {
                   </p>
 
                   <p style={{ margin: '0.4rem 0' }}>
-                    <strong>Due:</strong> {task.due_date || '—'}
+                    <strong>Due:</strong> {task.due_date ? new Date(task.due_date).toLocaleDateString() : '—'}
                   </p>
 
                   <p style={{ margin: '0.4rem 0' }}>
-                    <strong>List:</strong> {getListName(task.list_id)}
+                    <strong>Category:</strong> {getListName(task.list_id)}
                   </p>
                 </div>
 
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteTask(task.id)}
-                    style={{
-                      background: '#ef4444',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
+                <button
+                  onClick={() => handleDeleteTask(task.id)}
+                  style={{
+                    background: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}
