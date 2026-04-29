@@ -36,7 +36,7 @@ const { selectedListId } = useOutletContext();
 
       {/* HEADER */}
       <h2>Dashboard</h2>
-      <p className="lead">Welcome back — here is your overview</p>
+      <p className="lead">Welcome back! Here is your overview</p>
 
       {/* STATS */}
       <div className="dashboardGrid">
@@ -53,7 +53,7 @@ const { selectedListId } = useOutletContext();
         </div>
 
         <div className="card">
-          <h3>Productivity</h3>
+          <h3>Have you been productive?</h3>
           <p>{completedTasks > 0 ? "Keep going" : "Start your first task!"}</p>
         </div>
       </div>
@@ -105,7 +105,7 @@ const { selectedListId } = useOutletContext();
         />
 
         <button onClick={saveJournal}>
-          Save Journal
+          Save Your Journal
         </button>
 
         {savedJournal && (
