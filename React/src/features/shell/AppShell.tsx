@@ -1,6 +1,8 @@
 // src/features/shell/AppShell.tsx
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { logout } from '../../core/auth/auth';
 import { TaskGroups } from '../lists/TaskGroups';
 import './AppShell.css';
@@ -15,10 +17,12 @@ export function AppShell() {
     void logout().then(() => navigate('/login', { replace: true }));
   };
 
+
   return (
     <div className="shell">
+
       {/* Top navigation bar */}
-      <header className="topbar">
+         <header className="topbar">
         <div className="brand">Daily Task Log</div>
         <nav>
           <NavLink to="/tasks" end className={({ isActive }) => (isActive ? 'active' : '')}>
@@ -34,7 +38,8 @@ export function AppShell() {
         <button type="button" className="ghost" onClick={handleLogout}>
           Log out
         </button>
-      </header>
+        </header>
+
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left Sidebar - Grouping Component */}
@@ -56,6 +61,9 @@ export function AppShell() {
           <Outlet context={{ selectedListId }} />
         </div>
       </div>
+
+      <Footer />
+
     </div>
   );
 }
