@@ -6,7 +6,8 @@ import {
   createTask, 
   deleteTask, 
   getTasks, 
-  getLists 
+  getLists,
+  toggleTaskComplete 
 } from '../../core/api/tasks-reminders-api';
 import type { Task, TaskList, TaskPriority } from '../../core/models/api.types';
 
@@ -22,7 +23,6 @@ export function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Form state
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [dueDate, setDueDate] = useState('');
@@ -34,16 +34,12 @@ export function TasksPage() {
       setError('');
 
       const filters: any = selectedListId !== null ? { list_id: selectedListId } : {};
-
-      const [tasksData, listsData] = await Promise.all([
-        getTasks(filters),
-        getLists()
-      ]);
+      const [tasksData, listsData] = await Promise.all([getTasks(filters), getLists()]);
 
       setTasks(tasksData);
       setLists(listsData);
     } catch (err) {
-      console.error(err);
+      console.error('loadData failed:', err);
       setError('Failed to load tasks.');
     } finally {
       setLoading(false);
@@ -53,6 +49,28 @@ export function TasksPage() {
   useEffect(() => {
     loadData();
   }, [selectedListId]);
+
+  // This is the fixed toggle handler
+  const handleToggleComplete = async (id: number) => {
+    console.log('Button clicked! Task ID:', id);
+
+    // Optimistic update - change UI immediately
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === id ? { ...task, completed: !task.completed } : task
+      )
+    );
+
+    try {
+      await toggleTaskComplete(id);
+      console.log('Toggle successful - syncing with server');
+      await loadData();        // Full sync with backend
+    } catch (err) {
+      console.error('Toggle failed:', err);
+      setError('Failed to update task status.');
+      loadData();              // Revert on error
+    }
+  };
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,12 +83,10 @@ export function TasksPage() {
         due_date: dueDate || null,
         list_id: selectedFormListId ? Number(selectedFormListId) : (selectedListId || null),
       });
-
       setTitle('');
       setPriority('medium');
       setDueDate('');
       setSelectedFormListId('');
-
       loadData();
     } catch (err) {
       setError('Failed to create task.');
@@ -104,7 +120,6 @@ export function TasksPage() {
       </h2>
       <p className="lead">Manage your daily tasks and productivity</p>
 
-      {/* Add Task Form */}
       <form onSubmit={handleAddTask} style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'grid', gap: '0.75rem' }}>
           <input
@@ -115,10 +130,7 @@ export function TasksPage() {
           />
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <select 
-              value={priority} 
-              onChange={(e) => setPriority(e.target.value as TaskPriority)}
-            >
+            <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
               <option value="low">Low Priority</option>
               <option value="medium">Medium Priority</option>
               <option value="high">High Priority</option>
@@ -169,7 +181,9 @@ export function TasksPage() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <h3 style={{ margin: '0 0 0.5rem 0' }}>{task.title}</h3>
+                  <h3 style={{ margin: '0 0 0.5rem 0', textDecoration: task.completed ? 'line-through' : 'none' }}>
+                    {task.title}
+                  </h3>
                   
                   <p style={{ margin: '0.4rem 0' }}>
                     <strong>Status:</strong>{' '}
@@ -191,19 +205,36 @@ export function TasksPage() {
                   </p>
                 </div>
 
-                <button
-                  onClick={() => handleDeleteTask(task.id)}
-                  style={{
-                    background: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 14px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Delete
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => handleToggleComplete(task.id)}
+                    style={{
+                      background: task.completed ? '#16a34a' : '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {task.completed ? 'Undo' : 'Mark Complete'}
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteTask(task.id)}
+                    style={{
+                      background: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}

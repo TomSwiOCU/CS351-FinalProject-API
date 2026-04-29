@@ -7,16 +7,17 @@ import './AppShell.css';
 
 export function AppShell() {
   const navigate = useNavigate();
+  
+  // State shared with TasksPage via Outlet context
   const [selectedListId, setSelectedListId] = useState<number | null>(null);
 
   const handleLogout = () => {
-    void logout().then(() => {
-      void navigate('/login', { replace: true });
-    });
+    void logout().then(() => navigate('/login', { replace: true }));
   };
 
   return (
     <div className="shell">
+      {/* Top navigation bar */}
       <header className="topbar">
         <div className="brand">Daily Task Log</div>
         <nav>
@@ -36,13 +37,13 @@ export function AppShell() {
       </header>
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar - Task Groups */}
+        {/* Left Sidebar - Grouping Component */}
         <div style={{ 
           width: '320px', 
           borderRight: '1.5px solid #e2e8f0', 
-          background: '#f8fafc',
-          overflowY: 'auto',
-          padding: '1.5rem'
+          background: '#f8fafc', 
+          overflowY: 'auto', 
+          padding: '1.5rem' 
         }}>
           <TaskGroups 
             selectedListId={selectedListId} 
@@ -50,9 +51,9 @@ export function AppShell() {
           />
         </div>
 
-        {/* Main Content Area */}
+        {/* Main Content Area - Renders TasksPage, ListsPage, etc. */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.75rem' }}>
-          <Outlet context={{ selectedListId, setSelectedListId }} />
+          <Outlet context={{ selectedListId }} />
         </div>
       </div>
     </div>

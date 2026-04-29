@@ -57,15 +57,25 @@ function createTasksRouter(store) {
     res.status(201).json(taskJson(result.task));
   });
 
-  router.patch("/:id/complete", (req, res) => {
-    const id = Number(req.params.id);
-    if (!Number.isInteger(id)) return sendError(res, 400, "Invalid task id.");
-    const { task, forbidden } = store.findTask(id, req.userId);
-    if (forbidden) return sendError(res, 403, "Not allowed to access this task.");
-    if (!task) return sendError(res, 404, "Task not found.");
-    task.completed = !task.completed;
-    res.json(taskJson(task));
-  });
+ router.patch("/:id/complete", (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return sendError(res, 400, "Invalid task id.");
+
+  const { task, forbidden } = store.findTask(id, req.userId);
+  if (forbidden) return sendError(res, 403, "Not allowed to access this task.");
+  if (!task) return sendError(res, 404, "Task not found.");
+
+  // Actually update the database
+  task.completed = !task.completed;
+
+  const result = store.updateTask(task, { completed: task.completed }, req.userId);
+
+  if (result.error) {
+    return sendError(res, 400, "Failed to update task");
+  }
+
+  res.json(taskJson(result.task));
+});
 
   router.get("/:id", (req, res) => {
     const id = Number(req.params.id);
