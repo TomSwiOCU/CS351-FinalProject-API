@@ -1,8 +1,16 @@
 // src/features/header/Header.jsx
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { logout } from "../../core/auth/auth";
 
 export default function Header() {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();           // Calls the real logout function
+    navigate("/login", { replace: true });
+  };
+
   return (
     <header style={{
       background: "#ffffff",
@@ -48,6 +56,21 @@ export default function Header() {
           Profile
         </NavLink>
       </nav>
+
+      <button 
+        onClick={handleLogout}
+        style={{
+          background: "#ef4444",
+          color: "white",
+          border: "none",
+          padding: "8px 16px",
+          borderRadius: "8px",
+          cursor: "pointer",
+          fontWeight: 500
+        }}
+      >
+        Log out
+      </button>
     </header>
   );
 }
