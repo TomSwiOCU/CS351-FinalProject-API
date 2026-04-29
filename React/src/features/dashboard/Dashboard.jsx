@@ -3,10 +3,14 @@ import { useOutletContext } from "react-router-dom";
 import { useTasksData } from "../../core/hooks/useTasksData";
 import "../panel.css";
 
-const { selectedListId } = useOutletContext();
+export default function Dashboard() {
+  
+  // Gets selectedListId from AppShell Outlet
+  const { selectedListId } = useOutletContext<{
+    selectedListId: number | null;
+  }>();
 
   const { tasks, lists, loading } = useTasksData(selectedListId);
-
   // JOURNAL STATE
   const [journalDate, setJournalDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -120,3 +124,4 @@ const { selectedListId } = useOutletContext();
 
     </section>
   );
+}

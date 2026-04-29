@@ -1,5 +1,6 @@
 // src/features/header/Header.jsx
 import React from "react";
+<<<<<<< Updated upstream
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../core/auth/auth";
 
@@ -24,6 +25,24 @@ export default function Header() {
         Daily Task Log
       </div>
 
+=======
+import { NavLink } from "react-router-dom";
+
+export default function Header() {
+  return (
+    <header style={{
+      background: "#ffffff",
+      borderBottom: "1.5px solid #e2e8f0",
+      padding: "1rem 1.5rem",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between"
+    }}>
+      <div style={{ fontWeight: 700, fontSize: "1.3rem", color: "#1e293b" }}>
+        Daily Task Log
+      </div>
+
+>>>>>>> Stashed changes
       <nav style={{ display: "flex", gap: "1.5rem" }}>
         <NavLink 
           to="/tasks" 
