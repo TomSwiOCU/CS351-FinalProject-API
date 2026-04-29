@@ -4,6 +4,7 @@ import { createList, deleteList, getLists, getTasksForList } from '../../core/ap
 import type { Task, TaskList } from '../../core/models/api.types';
 
 export function ListsPage() {
+  // STATE MANAGEMENT
   const [lists, setLists] = useState<TaskList[]>([]);
   const [selectedListId, setSelectedListId] = useState<number | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -12,6 +13,7 @@ export function ListsPage() {
   const [tasksLoading, setTasksLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // LOAD LISTS FROM API
   async function loadLists() {
     try {
       setLoading(true);
@@ -25,10 +27,12 @@ export function ListsPage() {
     }
   }
 
+  // RUN ON PAGE LOAD
   useEffect(() => {
     loadLists();
   }, []);
 
+  // CREATE NEW LIST
   async function handleCreateList(e: React.FormEvent) {
     e.preventDefault();
 
@@ -43,6 +47,7 @@ export function ListsPage() {
     }
   }
 
+  // DELETE LIST
   async function handleDeleteList(id: number) {
     try {
       await deleteList(id);
@@ -58,6 +63,7 @@ export function ListsPage() {
     }
   }
 
+  // LOAD TASKS FOR SELECTED LIST
   async function handleViewTasks(listId: number) {
     try {
       setTasksLoading(true);
@@ -73,6 +79,7 @@ export function ListsPage() {
     }
   }
 
+  // GET SELECTED LIST NAME
   function getSelectedListName() {
     const list = lists.find((item) => item.id === selectedListId);
     return list ? list.name : 'Selected List';
@@ -83,6 +90,7 @@ export function ListsPage() {
       <h2>Task Lists</h2>
       <p className="lead">Create lists to group tasks and view the tasks inside each list.</p>
 
+      {/* CREATE LIST FORM */}
       <form onSubmit={handleCreateList} style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'grid', gap: '0.75rem' }}>
           <input
@@ -95,8 +103,10 @@ export function ListsPage() {
         </div>
       </form>
 
+      {/* ERROR MESSAGE */}
       {error && <p className="muted">{error}</p>}
 
+      {/* LIST DISPLAY */}
       {loading ? (
         <p className="muted">Loading lists...</p>
       ) : lists.length === 0 ? (
@@ -117,6 +127,7 @@ export function ListsPage() {
                   <h3 style={{ margin: 0 }}>{list.name}</h3>
                 </div>
 
+                {/* LIST ACTION BUTTONS */}
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button type="button" onClick={() => handleViewTasks(list.id)}>
                     View Tasks
@@ -131,6 +142,7 @@ export function ListsPage() {
         </div>
       )}
 
+      {/* TASK DISPLAY */}
       {selectedListId !== null && (
         <div>
           <h3>{getSelectedListName()} Tasks</h3>

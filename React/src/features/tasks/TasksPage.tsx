@@ -1,4 +1,3 @@
-// src/features/tasks/TasksPage.tsx
 import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import '../panel.css';
@@ -16,8 +15,10 @@ type OutletContextType = {
 };
 
 export function TasksPage() {
+  // GET SELECTED LIST FROM PARENT
   const { selectedListId } = useOutletContext<OutletContextType>();
 
+  // STATE MANAGEMENT
   const [tasks, setTasks] = useState<Task[]>([]);
   const [lists, setLists] = useState<TaskList[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,7 @@ export function TasksPage() {
   const [dueDate, setDueDate] = useState('');
   const [selectedFormListId, setSelectedFormListId] = useState<string>('');
 
+  // LOAD TASKS AND LISTS FROM API
   async function loadData() {
     try {
       setLoading(true);
@@ -46,6 +48,7 @@ export function TasksPage() {
     }
   }
 
+  // RUN WHEN PAGE LOADS OR LIST CHANGES
   useEffect(() => {
     loadData();
   }, [selectedListId]);
@@ -54,7 +57,6 @@ export function TasksPage() {
   const handleToggleComplete = async (id: number) => {
     console.log('Button clicked! Task ID:', id);
 
-    // Optimistic update - change UI immediately
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === id ? { ...task, completed: !task.completed } : task
@@ -64,14 +66,15 @@ export function TasksPage() {
     try {
       await toggleTaskComplete(id);
       console.log('Toggle successful - syncing with server');
-      await loadData();        // Full sync with backend
+      await loadData();
     } catch (err) {
       console.error('Toggle failed:', err);
       setError('Failed to update task status.');
-      loadData();              // Revert on error
+      loadData();
     }
   };
 
+  // ADD NEW TASK
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -93,6 +96,7 @@ export function TasksPage() {
     }
   };
 
+  // DELETE TASK
   const handleDeleteTask = async (id: number) => {
     if (!confirm('Delete this task?')) return;
     try {
@@ -103,6 +107,7 @@ export function TasksPage() {
     }
   };
 
+  // GET LIST NAME FOR DISPLAY
   const getListName = (taskListId: number | null) => {
     if (taskListId === null) return 'No Category';
     const list = lists.find(l => l.id === taskListId);
@@ -120,6 +125,7 @@ export function TasksPage() {
       </h2>
       <p className="lead">Manage your daily tasks and productivity</p>
 
+      {/* ADD TASK FORM */}
       <form onSubmit={handleAddTask} style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'grid', gap: '0.75rem' }}>
           <input
@@ -159,8 +165,10 @@ export function TasksPage() {
         </div>
       </form>
 
+      {/* ERROR MESSAGE */}
       {error && <p style={{ color: '#ef4444' }}>{error}</p>}
 
+      {/* TASK LIST DISPLAY */}
       {loading ? (
         <p className="muted">Loading tasks...</p>
       ) : tasks.length === 0 ? (
@@ -205,6 +213,7 @@ export function TasksPage() {
                   </p>
                 </div>
 
+                {/* TASK ACTION BUTTONS */}
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => handleToggleComplete(task.id)}
